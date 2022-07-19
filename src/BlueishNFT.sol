@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "solmate/tokens/ERC721.sol";
+import "forge-std/console2.sol";
 import "openzeppelin-contracts/contracts/utils/Strings.sol"; 
 import "openzeppelin-contracts/contracts/utils/Base64.sol";
 
@@ -20,15 +21,22 @@ contract BlueishNFT is ERC721 {
     }
 
     function tokenURI(uint256 id) public view virtual override returns (string memory) {
-        foo(); 
-    }
+        string memory baseURL = "data:application/json;base64,";
+        string memory svg = this.svgForToken(id);
 
-    function foo() public pure {
-
+        string memory json = string(
+            abi.encodePacked(
+                '{"name": "blueish", "description": "Blueish PFP", "image":"',
+                this.svgToImageURI(svg),
+                '"}'
+            )
+        );
+        string memory jsonBase64EncodedMetadata = Base64.encode(bytes(json));
+        return string(abi.encodePacked(baseURL, jsonBase64EncodedMetadata));
     }
 
     function svgForToken(uint256 tokenId) public pure returns(string memory svg) {
-       svg =  "<svg width='140' height='140'><rect x='0' y='0' width='140' height='140' style='fill:#ffffff;stroke-width:3;stroke:black'/></svg>";
+       svg =  "<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><rect x='0' y='0' width='140' height='140' style='fill:blue;stroke-width:3;stroke:blue'/></svg>";
     }
 
     function svgToImageURI(string memory svg) public pure returns(string memory imgURI) {

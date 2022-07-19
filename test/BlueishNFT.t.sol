@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
+import "forge-std/console2.sol";
 import "../src/BlueishNFT.sol";
 
 contract BlueishNFTTest is Test {
@@ -10,6 +11,8 @@ contract BlueishNFTTest is Test {
     BlueishNFT private blueishNFT;
 
     function setUp() public {
+        // clear mocked calls between tests
+        // vm.clearMockedCalls();
         // deploy the NFT
         blueishNFT = new BlueishNFT("Blueish NFT", "BLU");
     }
@@ -73,7 +76,7 @@ contract BlueishNFTTest is Test {
         // the third param passed to Forge's std lib `assertEq` assertion is output in the case of a failng assertion
         // This output will only show when running `forge test` with verbosity level 2, `forge test -vv`
         string
-            memory testSVGMarkup = "<svg width='140' height='140'><rect x='0' y='0' width='140' height='140' style='fill:#ffffff;stroke-width:3;stroke:black'/></svg>";
+            memory testSVGMarkup = "<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><rect x='0' y='0' width='140' height='140' style='fill:blue;stroke-width:3;stroke:blue'/></svg>";
         assertEq(
             keccak256(abi.encodePacked(testSVGMarkup)),
             keccak256(abi.encodePacked(svg)),
@@ -93,6 +96,7 @@ contract BlueishNFTTest is Test {
         );
 
         string memory base64encodedSVGURI = blueishNFT.svgToImageURI(svg);
+        console2.log("encoded svg", base64encodedSVGURI);
 
         assertEq(
             keccak256(abi.encodePacked(expectedImageURI)),
@@ -104,10 +108,36 @@ contract BlueishNFTTest is Test {
     function testTokenURI() public {
         uint256 tokenId = blueishNFT.mintTo(address(1));
 
+        // set up mocks
+        string memory mockSVGForTokenReturn = "svg";
+        string memory mockSVGToImageURIReturn = "svgURI";
+
+        vm.mockCall(address(blueishNFT), abi.encodeWithSelector(blueishNFT.svgForToken.selector, tokenId), abi.encode(mockSVGForTokenReturn));
+        vm.mockCall(address(blueishNFT), abi.encodeWithSelector(blueishNFT.svgToImageURI.selector, mockSVGForTokenReturn), abi.encode(mockSVGToImageURIReturn));
+
+        // set up expected return value
+        string memory tokenURIBaseURL = "data:application/json;base64,";
+        string memory tokenURIJSON = string(
+           abi.encodePacked(
+                '{"name": "blueish", "description": "Blueish PFP", "image":"',
+                mockSVGToImageURIReturn,
+                '"}'
+            )
+        );
+        string memory encodedJSON = Base64.encode(bytes(tokenURIJSON));
+        string memory expectedVal = string(abi.encodePacked(tokenURIBaseURL, encodedJSON));
+
+        // console2.log("Output of tokenURI", blueishNFT.tokenURI(tokenId));
+        // console2.log("expected val", expectedVal);
+
+        assertEq(
+            abi.encode(blueishNFT.tokenURI(tokenId)),
+            abi.encode(expectedVal)
+        );
+
         // Unfortunately the below doesn't work with internal calls yet : https://github.com/foundry-rs/foundry/issues/876
         
         // vm.expectCall(address(blueishNFT), abi.encodeCall(blueishNFT.foo, ()));
         // blueishNFT.tokenURI(tokenId);
-        // string memory tokenURI = blueishNFT.tokenURI(tokenId);
     }
 }
