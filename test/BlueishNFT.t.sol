@@ -7,6 +7,11 @@ import "../src/BlueishNFT.sol";
 
 contract BlueishNFTTest is Test {
     using stdStorage for StdStorage;
+    event Transfer(
+        address indexed from,
+        address indexed to,
+        uint256 indexed id
+    );
 
     BlueishNFT private blueishNFT;
 
@@ -96,7 +101,7 @@ contract BlueishNFTTest is Test {
         );
 
         string memory base64encodedSVGURI = blueishNFT.svgToImageURI(svg);
-        console2.log("encoded svg", base64encodedSVGURI);
+        // console2.log("encoded svg", base64encodedSVGURI);
 
         assertEq(
             keccak256(abi.encodePacked(expectedImageURI)),
@@ -112,20 +117,33 @@ contract BlueishNFTTest is Test {
         string memory mockSVGForTokenReturn = "svg";
         string memory mockSVGToImageURIReturn = "svgURI";
 
-        vm.mockCall(address(blueishNFT), abi.encodeWithSelector(blueishNFT.svgForToken.selector, tokenId), abi.encode(mockSVGForTokenReturn));
-        vm.mockCall(address(blueishNFT), abi.encodeWithSelector(blueishNFT.svgToImageURI.selector, mockSVGForTokenReturn), abi.encode(mockSVGToImageURIReturn));
+        vm.mockCall(
+            address(blueishNFT),
+            abi.encodeWithSelector(blueishNFT.svgForToken.selector, tokenId),
+            abi.encode(mockSVGForTokenReturn)
+        );
+        vm.mockCall(
+            address(blueishNFT),
+            abi.encodeWithSelector(
+                blueishNFT.svgToImageURI.selector,
+                mockSVGForTokenReturn
+            ),
+            abi.encode(mockSVGToImageURIReturn)
+        );
 
         // set up expected return value
         string memory tokenURIBaseURL = "data:application/json;base64,";
         string memory tokenURIJSON = string(
-           abi.encodePacked(
+            abi.encodePacked(
                 '{"name": "blueish", "description": "Blueish PFP", "image":"',
                 mockSVGToImageURIReturn,
                 '"}'
             )
         );
         string memory encodedJSON = Base64.encode(bytes(tokenURIJSON));
-        string memory expectedVal = string(abi.encodePacked(tokenURIBaseURL, encodedJSON));
+        string memory expectedVal = string(
+            abi.encodePacked(tokenURIBaseURL, encodedJSON)
+        );
 
         // console2.log("Output of tokenURI", blueishNFT.tokenURI(tokenId));
         // console2.log("expected val", expectedVal);
@@ -136,8 +154,16 @@ contract BlueishNFTTest is Test {
         );
 
         // Unfortunately the below doesn't work with internal calls yet : https://github.com/foundry-rs/foundry/issues/876
-        
+
         // vm.expectCall(address(blueishNFT), abi.encodeCall(blueishNFT.foo, ()));
         // blueishNFT.tokenURI(tokenId);
+    }
+
+    function testMintedEvent() public {
+        vm.expectEmit(true, true, true, false, address(blueishNFT));
+
+        emit Transfer(address(0), address(1), 1);
+
+        blueishNFT.mintTo(address(1));
     }
 }
