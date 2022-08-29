@@ -19,6 +19,19 @@ contract BlueishNFT is ERC721 {
         return newTokenId;
     }
 
+    function contractURI() public view returns (string memory) {
+        string memory baseURL = "data:application/json;base64,";
+
+        string memory json = string(
+            abi.encodePacked(
+                '{"name": "blueishNFT", "description": "blueishNFT is a beginner level template for end to end Solidity smart contract development and on-chain art", "external_link":"https://github.com/blueishdoteth/blueishNFT","image":"https://gateway.pinata.cloud/ipfs/Qmbm92KCi1ocsS4L2oDohvxTVBdqQqhRp29iUxXt5ATBPx"}'
+            )
+        );
+
+        string memory jsonBase64EncodedMetadata = Base64.encode(bytes(json));
+        return string(abi.encodePacked(baseURL, jsonBase64EncodedMetadata));
+    }
+
     function tokenURI(uint256 id)
         public
         view

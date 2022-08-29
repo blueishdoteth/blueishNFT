@@ -175,4 +175,26 @@ contract BlueishNFTTest is Test {
         //submit tx that will trigger the expected event with expected values
         blueishNFT.mintTo(address(1));
     }
+
+    function testContractMetadata() public {
+
+        string memory contractURIBaseURL = "data:application/json;base64,";
+
+        string memory contractURIJSON = string(
+            abi.encodePacked(
+                '{"name": "blueishNFT", "description": "blueishNFT is a beginner level template for end to end Solidity smart contract development and on-chain art", "external_link":"https://github.com/blueishdoteth/blueishNFT","image":"https://gateway.pinata.cloud/ipfs/Qmbm92KCi1ocsS4L2oDohvxTVBdqQqhRp29iUxXt5ATBPx"}'
+            )
+        );
+
+        string memory encodedJSON = Base64.encode(bytes(contractURIJSON));
+
+         string memory expectedVal = string(
+            abi.encodePacked(contractURIBaseURL, encodedJSON)
+        );
+
+        assertEq(
+            abi.encode(blueishNFT.contractURI()),
+            abi.encode(expectedVal)
+        );
+    }
 }
