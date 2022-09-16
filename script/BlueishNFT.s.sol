@@ -10,7 +10,7 @@ contract BlueishNFTScript is Script {
     function run() public {
         vm.broadcast();
 
-        BlueishNFT nft = new BlueishNFT("Blueish NFT", "BLU");
+        BlueishNFT nft = new BlueishNFT("Blueish NFT", "BLU", address(1));
 
         vm.stopBroadcast();
     }
