@@ -4,22 +4,32 @@ pragma solidity ^0.8.13;
 import "forge-std/Script.sol";
 import "../src/BlueishNFT.sol";
 import "../src/BlueishRenderer.sol";
+import "../src/BlueishOnChainMetadata.sol";
 
 contract BlueishNFTScript is Script {
     function setUp() public {}
 
     function run() public {
-        vm.startBroadcast();
+        address owner = vm.envAddress("OWNER");
+
+        // deploy renderer
+        vm.startBroadcast(owner);
         
         BlueishRenderer renderer = new BlueishRenderer();
 
         vm.stopBroadcast();
 
-        address nftOwner = vm.envAddress("OWNER");
+        // deploy metadata
+        vm.startBroadcast(owner);
 
-        vm.startBroadcast(nftOwner);
+        BlueishOnChainMetadata metadata = new BlueishOnChainMetadata(address(renderer));
 
-        BlueishNFT nft = new BlueishNFT("Blueish NFT", "BLU", address(renderer));
+        vm.stopBroadcast();
+
+        // deploy NFT
+        vm.startBroadcast(owner);
+
+        BlueishNFT nft = new BlueishNFT("Blueish NFT", "BLU", address(metadata));
 
         vm.stopBroadcast();
     }

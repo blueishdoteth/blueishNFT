@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "forge-std/console2.sol";
 import "../src/BlueishNFT.sol";
 import "../src/BlueishRenderer.sol";
+import "../src/BlueishOnChainMetadata.sol";
 
 /// @title blueishNFT
 /// @author blueish.eth
@@ -21,15 +22,17 @@ contract BlueishNFTTest is Test {
 
     BlueishNFT private blueishNFT;
     BlueishRenderer private renderer;
+    BlueishOnChainMetadata private metadata;
 
     function setUp() public {
         // the setUp() function will run before each test function. At a minimum we should deploy the contract  we're testing
 
         // renderer
         renderer = new BlueishRenderer();
+        metadata = new BlueishOnChainMetadata(address(renderer));
 
         // deploy the NFT
-        blueishNFT = new BlueishNFT("Blueish NFT", "BLU", address(renderer));
+        blueishNFT = new BlueishNFT("Blueish NFT", "BLU", address(metadata));
     }
 
     // tests beginning with 'testFail' in function signature will 'pass' if reverted and 'fail' if not reverted
@@ -84,80 +87,20 @@ contract BlueishNFTTest is Test {
         assertEq(newBalance, 2);
     }
 
-    function testGenerateSVG() public {
-        uint256 tokenId = blueishNFT.mintTo(address(1));
-        // set up mocks
-        string memory mockSVGFromRenderer = "<svg></>";
-
-        vm.mockCall(
-            address(renderer),
-            abi.encodeWithSelector(renderer.render.selector, tokenId),
-            abi.encode(mockSVGFromRenderer)
-        );
-
-        string memory svg = blueishNFT.svgForToken(tokenId);
-        // keccak256(abi.encodePacked(string)) is used for string comparison
-        // the third param passed to Forge's std lib `assertEq` assertion is output in the case of a failng assertion
-        // This output will only show when running `forge test` with verbosity level 2, `forge test -vv`
-
-        assertEq(
-            keccak256(abi.encodePacked(mockSVGFromRenderer)),
-            keccak256(abi.encodePacked(svg)),
-            "SVG output does not equal expected"
-        );
-    }
-
-    function testSVGToImageURI() public {
-        // set up expected value for base64 encoded SVG image URI
-        string memory svg = "<svg></>";
-        string memory encodedSVG = Base64.encode(bytes(svg));
-        string memory svgDataURIbaseURL = "data:image/svg+xml;base64,";
-        string memory expectedImageURI = string(
-            abi.encodePacked(svgDataURIbaseURL, encodedSVG)
-        );
-
-        string memory actualImageURI = blueishNFT.svgToImageURI(svg);
-
-        // below console statement is helpful for outputing encoded SVG data uri and testing in browser
-        // console2.log("Image URI", base64encodedSVGURI);
-
-        assertEq(
-            keccak256(abi.encodePacked(actualImageURI)),
-            keccak256(abi.encodePacked(expectedImageURI)),
-            "Image URI output does not equal expected"
-        );
-    }
-
     function testTokenURI() public {
         uint256 tokenId = blueishNFT.mintTo(address(1));
         // set up mocks
-        string memory mockSVGFromRenderer = "<svg></>";
+        string memory mockTokenURI = "mockedTokenURI";
 
         vm.mockCall(
-            address(renderer),
-            abi.encodeWithSelector(renderer.render.selector, tokenId),
-            abi.encode(mockSVGFromRenderer)
-        );
-        
-        string memory imageURI = blueishNFT.svgToImageURI(mockSVGFromRenderer);
-
-        // set up expected return value
-        string memory tokenURIBaseURL = "data:application/json;base64,";
-        string memory tokenURIJSON = string(
-            abi.encodePacked(
-                '{"name": "blueishNFT", "description": "blueishNFT is a beginner level template for end to end Solidity smart contract development and on-chain art", "image":"',
-                imageURI,
-                '"}'
-            )
-        );
-        string memory encodedJSON = Base64.encode(bytes(tokenURIJSON));
-        string memory expectedVal = string(
-            abi.encodePacked(tokenURIBaseURL, encodedJSON)
+            address(metadata),
+            abi.encodeWithSelector(metadata.tokenURI.selector, tokenId),
+            abi.encode(mockTokenURI)
         );
 
         assertEq(
             abi.encode(blueishNFT.tokenURI(tokenId)),
-            abi.encode(expectedVal)
+            abi.encode(mockTokenURI)
         );
     }
 
@@ -174,21 +117,16 @@ contract BlueishNFTTest is Test {
     }
 
     function testContractMetadata() public {
-        string memory contractURIBaseURL = "data:application/json;base64,";
+        // set up mocks
+        string memory mockContractURI = "mockedContractURI";
 
-        string memory contractURIJSON = string(
-            abi.encodePacked(
-                '{"name": "blueishNFT", "description": "blueishNFT is a beginner level template for end to end Solidity smart contract development and on-chain art", "external_link":"https://github.com/blueishdoteth/blueishNFT","image":"https://gateway.pinata.cloud/ipfs/QmYGiiTiY4aoRXem3HbQqbwQrASwkarGjeu2xsnGUvKyxr"}'
-            )
+        vm.mockCall(
+            address(metadata),
+            abi.encodeWithSelector(metadata.contractURI.selector),
+            abi.encode(mockContractURI)
         );
 
-        string memory encodedJSON = Base64.encode(bytes(contractURIJSON));
-
-        string memory expectedVal = string(
-            abi.encodePacked(contractURIBaseURL, encodedJSON)
-        );
-
-        assertEq(abi.encode(blueishNFT.contractURI()), abi.encode(expectedVal));
+        assertEq(abi.encode(blueishNFT.contractURI()), abi.encode(mockContractURI));
     }
 
     function testIsOwnable() public {

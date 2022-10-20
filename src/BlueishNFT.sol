@@ -7,6 +7,7 @@ import "openzeppelin-contracts/contracts/utils/Strings.sol";
 import "openzeppelin-contracts/contracts/utils/Base64.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "./interfaces/IBlueishRenderer.sol";
+import "./interfaces/IBlueishMetadata.sol";
 
 error WithdrawFailed();
 
@@ -17,12 +18,12 @@ error WithdrawFailed();
 
 contract BlueishNFT is ERC721, Ownable {
     uint256 public currentTokenId;
-    IBlueishRenderer public renderer;
+    IBlueishMetadata public metadata;
 
-    constructor(string memory _name, string memory _symbol, address _renderer)
+    constructor(string memory _name, string memory _symbol, address _metadata)
         ERC721(_name, _symbol)
     {
-        renderer = IBlueishRenderer(_renderer);
+        metadata = IBlueishMetadata(_metadata);
     }
 
     function mintTo(address recipient) public payable returns (uint256) {
@@ -31,17 +32,13 @@ contract BlueishNFT is ERC721, Ownable {
         return newTokenId;
     }
 
-    function contractURI() public pure returns (string memory) {
-        string memory baseURL = "data:application/json;base64,";
+    function setMetadata(address _metadata) public onlyOwner {
+       metadata = IBlueishMetadata(_metadata);
+    }
 
-        string memory json = string(
-            abi.encodePacked(
-                '{"name": "blueishNFT", "description": "blueishNFT is a beginner level template for end to end Solidity smart contract development and on-chain art", "external_link":"https://github.com/blueishdoteth/blueishNFT","image":"https://gateway.pinata.cloud/ipfs/QmYGiiTiY4aoRXem3HbQqbwQrASwkarGjeu2xsnGUvKyxr"}'
-            )
-        );
-
-        string memory jsonBase64EncodedMetadata = Base64.encode(bytes(json));
-        return string(abi.encodePacked(baseURL, jsonBase64EncodedMetadata));
+    function contractURI() public view returns (string memory) {
+        return metadata.contractURI();
+      
     }
 
     function tokenURI(uint256 id)
@@ -51,36 +48,7 @@ contract BlueishNFT is ERC721, Ownable {
         override
         returns (string memory)
     {
-        string memory baseURL = "data:application/json;base64,";
-        string memory svg = svgForToken(id);
-
-        string memory json = string(
-            abi.encodePacked(
-                '{"name": "blueishNFT", "description": "blueishNFT is a beginner level template for end to end Solidity smart contract development and on-chain art", "image":"',
-                this.svgToImageURI(svg),
-                '"}'
-            )
-        );
-        string memory jsonBase64EncodedMetadata = Base64.encode(bytes(json));
-        return string(abi.encodePacked(baseURL, jsonBase64EncodedMetadata));
-    }
-
-    function svgForToken(uint256 tokenId)
-        public
-        view
-        returns (string memory svg)
-    {
-        svg = renderer.render(tokenId);
-    }
-
-    function svgToImageURI(string memory svg)
-        public
-        pure
-        returns (string memory imgURI)
-    {
-        string memory baseURL = "data:image/svg+xml;base64,";
-        string memory encodedSVG = Base64.encode(bytes(svg));
-        imgURI = string(abi.encodePacked(baseURL, encodedSVG));
+        return metadata.tokenURI(id);
     }
 
     function withdrawFunds(address payable payee) external onlyOwner {
