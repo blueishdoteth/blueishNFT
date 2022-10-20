@@ -24,6 +24,7 @@ This template covers the following topics:
 - run tests using the `forge test -vv` command (`-vv` will output custom failure messages and logging to terminal)
 - update the contract and tests. Want to make an ERC1155 instead? Have an idea for making the on-chain art dynamic? Have at it!
 - when ready to deploy to testnet or mainnet:
+  - create a .env and populate variables with relevant information (use .env.example as a template)
   - update the deployment contract in the `script` directory
   - use the `forge script` command to deploy (further instructions can be found in the comments in `script/BlueishNFT.s.sol`)
 - use your block explorer of choice (ex. [Etherscan](https://etherscan.io/), [Polygonscan](https://polygonscan.com/)) to interact with your contract and mint NFTs.
