@@ -30,4 +30,4 @@ This template covers the following topics:
 - use your block explorer of choice (ex. [Etherscan](https://etherscan.io/), [Polygonscan](https://polygonscan.com/)) to interact with your contract and mint NFTs.
 
 ## Original Contract
-You can find and mint nfts from the original blueish project [here](https://goerli.etherscan.io/address/0x2928441e30ebb30e8cf2388e538202147317d349) and [here](https://testnets.opensea.io/collection/blueishnft-v3). Use them as your pfp to show some 💙
+You can view, mint and trade nfts from the original blueish project [here](https://etherscan.io/address/0x2928441E30EBB30e8CF2388e538202147317D349) and [here](https://opensea.io/collection/blueishnft). Use them as your pfp to show some 💙
